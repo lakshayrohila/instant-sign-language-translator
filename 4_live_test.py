@@ -27,7 +27,6 @@ latency_ms = math.floor(1000/fps)
 def match_input(input, comparision):
     return (input&0xFF) == ord(comparision.lower())
 
-
 while True:
     is_capture_successful, frame = capture.read()
     if not is_capture_successful: break
@@ -39,7 +38,9 @@ while True:
     min_x = min_y = 1 # for normalizing of landmark points later
     max_x = max_y = 0
 
+    frame_rgb.flags.writeable = False # to make hands.process faster
     hands_result = hands.process(frame_rgb)
+    frame_rgb.flags.writeable = True
     if hands_result.multi_hand_landmarks:
         for crr_hand_landmarks in hands_result.multi_hand_landmarks:
             for crr_landmark in crr_hand_landmarks.landmark:
@@ -62,6 +63,9 @@ while True:
 
         model_prediction = model.predict([crr_hands_data])[0]
         m_predict_as_char = chr(model_prediction)
+
+        for crr_hand_landmarks in hands_result.multi_hand_landmarks:
+            mp_drawing.draw_landmarks(frame, crr_hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
         (text_w, text_h), _ = cv.getTextSize(m_predict_as_char, cv.FONT_HERSHEY_COMPLEX, 2, 2)
         cv.rectangle(frame, (45,80), (55+text_w,70-text_h), (0,0,0), -1)
